@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stacked Diagrams</title>
+<style>
+:root{--bg:#f7f7f8;--card:#ffffff;--ink:#18181b;--mute:#52525b;--line:#e4e4e7;--accent:#4338ca;--chip:#f4f4f5;--thumb:#ffffff;
+--gattack:#b91c1c;--gdd:#4338ca;--gcode:#0f766e;--gportal:#b45309}
+:root.dark{--bg:#0b0b0f;--card:#17171c;--ink:#f4f4f5;--mute:#a1a1aa;--line:#2a2a33;--chip:#23232b;--accent:#a5b4fc;--thumb:#e9e9ee;
+--gattack:#f87171;--gdd:#818cf8;--gcode:#2dd4bf;--gportal:#fbbf24}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",Arial,sans-serif}
+header{padding:28px 24px 8px;max-width:1240px;margin:0 auto;position:relative}
+h1{margin:0 0 4px;font-size:28px}.sub{color:var(--mute);margin:0 0 16px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer;font:inherit}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+:root.dark .chip.on{color:#111}
+input[type=search]{flex:1;min-width:200px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 12px;font:inherit}
+main{max-width:1240px;margin:0 auto;padding:8px 24px 40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.thumb{position:relative;border:0;padding:0;cursor:zoom-in;background:var(--thumb);aspect-ratio:16/10;display:block;width:100%;border-bottom:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:contain;display:block;opacity:.95}
+.thumb:hover img{opacity:1}
+.open{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.72);color:#fff;border-radius:6px;padding:3px 9px;font-size:12.5px}
+.body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.tags{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tag{font-size:12px;font-weight:600;border-radius:999px;padding:2px 10px;color:#fff}
+:root.dark .tag.g{color:#111}
+.tag.attack{background:var(--gattack)}.tag.dd{background:var(--gdd)}.tag.code{background:var(--gcode)}.tag.portal{background:var(--gportal)}
+.tag.t{background:var(--chip);color:var(--mute)}.date{color:var(--mute);font-size:13px;margin-left:auto}
+h2{font-size:18px;margin:4px 0 0}.about{margin:0;color:var(--ink)}
+.actions{display:flex;gap:8px;margin-top:auto;padding-top:8px}
+.btn{background:var(--accent);color:#fff;text-decoration:none;border-radius:9px;padding:6px 14px;font-weight:600;font-size:14px;border:0;cursor:pointer;font-family:inherit}
+:root.dark .btn{color:#111}
+.btn.ghost,:root.dark .btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--line)}
+.thumb img.dk{display:none}:root.dark .thumb img.lt{display:none}:root.dark .thumb img.dk{display:block}
+:root.dark .thumb{background:#14161c}
+.key{max-width:1240px;margin:0 auto;padding:0 24px 32px;color:var(--mute);font-size:13px}
+dialog{border:0;border-radius:14px;padding:0;width:96vw;height:92vh;max-width:none;max-height:none;background:var(--card);overflow:hidden}
+dialog::backdrop{background:rgba(0,0,0,.72)}
+.dh{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:8px 12px;background:#111;color:#fff;font-size:14px;height:44px}
+.dh a{color:#c7d2fe;margin-left:auto;font-size:13px}.dh button{background:none;border:0;color:#fff;font-size:22px;cursor:pointer;line-height:1}
+dialog iframe{width:100%;height:calc(92vh - 44px);border:0;display:block;background:#fff}
+#theme{position:absolute;top:28px;right:24px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 12px;font:600 13px "Segoe UI",Arial,sans-serif;cursor:pointer}
+@media print{#theme{display:none}}
+@media (max-width:520px){header,main,.key{padding-left:16px;padding-right:16px}main{grid-template-columns:1fr}#theme{right:16px}}
+</style></head><body>
+<header>
+  <button id="theme" type="button" aria-label="Switch between light and dark">Dark</button>
+  <h1>Stacked Diagrams</h1>
+  <p class="sub">19 live stack diagrams since 8 Nov 2026. Click a picture to expand it here; every diagram plays step by step and has its own light and dark switch. <span id="count"></span></p>
+  <div class="bar" role="toolbar">
+    <button class="chip on" data-f="all">All</button><button class="chip" data-f="attack">Card attack and reCAPTCHA</button><button class="chip" data-f="dd">Orchestrator design docs</button><button class="chip" data-f="code">Orchestrator code flows</button><button class="chip" data-f="portal">Payments portal</button>
+    <input type="search" placeholder="Search a title or ticket, for example PAYMT-498 or DD-005" aria-label="Search">
+  </div>
+</header>
+<main>
+<article class="card" data-g="attack" data-search="recaptcha path explorer thirteen path buttons: the seven figma journeys plus the attacker&#x27;s real path with no check, his log-mode week, enforce today, and three weak spots in the code. paymt-498 card attack and recaptcha">
+  <button class="thumb" data-open="reCAPTCHA-Path-Explorer.html" data-title="reCAPTCHA path explorer" aria-label="Expand reCAPTCHA path explorer">
+    <img class="lt" src="_thumbs/reCAPTCHA-Path-Explorer.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/reCAPTCHA-Path-Explorer-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g attack">Card attack and reCAPTCHA</span><span class="tag t">PAYMT-498</span><span class="date">2026-11-11</span></div>
+    <h2>reCAPTCHA path explorer</h2>
+    <p class="about">Thirteen path buttons: the seven Figma journeys plus the attacker&#x27;s real path with no check, his log-mode week, enforce today, and three weak spots in the code.</p>
+    <div class="actions"><button class="btn" data-open="reCAPTCHA-Path-Explorer.html" data-title="reCAPTCHA path explorer">Expand</button><a class="btn ghost" href="reCAPTCHA-Path-Explorer.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="portal" data-search="payments portal admin site, every tab every tab of the payments portal and what it controls. paymt-523 payments portal">
+  <button class="thumb" data-open="Payments-Portal-Admin-Site.html" data-title="Payments portal admin site, every tab" aria-label="Expand Payments portal admin site, every tab">
+    <img class="lt" src="_thumbs/Payments-Portal-Admin-Site.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/Payments-Portal-Admin-Site-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g portal">Payments portal</span><span class="tag t">PAYMT-523</span><span class="date">2026-11-11</span></div>
+    <h2>Payments portal admin site, every tab</h2>
+    <p class="about">Every tab of the payments portal and what it controls.</p>
+    <div class="actions"><button class="btn" data-open="Payments-Portal-Admin-Site.html" data-title="Payments portal admin site, every tab">Expand</button><a class="btn ghost" href="Payments-Portal-Admin-Site.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="code" data-search="s4: how checkout hears a payment&#x27;s result one result: written, signed, delivered, verified, retried and resent. paymt-520 orchestrator code flows">
+  <button class="thumb" data-open="S4-Webhooks-To-Merchants.html" data-title="S4: how checkout hears a payment&#x27;s result" aria-label="Expand S4: how checkout hears a payment&#x27;s result">
+    <img class="lt" src="_thumbs/S4-Webhooks-To-Merchants.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/S4-Webhooks-To-Merchants-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g code">Orchestrator code flows</span><span class="tag t">PAYMT-520</span><span class="date">2026-11-09</span></div>
+    <h2>S4: how checkout hears a payment&#x27;s result</h2>
+    <p class="about">One result: written, signed, delivered, verified, retried and resent.</p>
+    <div class="actions"><button class="btn" data-open="S4-Webhooks-To-Merchants.html" data-title="S4: how checkout hears a payment&#x27;s result">Expand</button><a class="btn ghost" href="S4-Webhooks-To-Merchants.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="code" data-search="s3: how a routing rule change goes live a rule change from draft to published version, then history and roll back. paymt-520 orchestrator code flows">
+  <button class="thumb" data-open="S3-Rule-Publishing-And-Versions.html" data-title="S3: how a routing rule change goes live" aria-label="Expand S3: how a routing rule change goes live">
+    <img class="lt" src="_thumbs/S3-Rule-Publishing-And-Versions.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/S3-Rule-Publishing-And-Versions-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g code">Orchestrator code flows</span><span class="tag t">PAYMT-520</span><span class="date">2026-11-09</span></div>
+    <h2>S3: how a routing rule change goes live</h2>
+    <p class="about">A rule change from draft to published version, then history and roll back.</p>
+    <div class="actions"><button class="btn" data-open="S3-Rule-Publishing-And-Versions.html" data-title="S3: how a routing rule change goes live">Expand</button><a class="btn ghost" href="S3-Rule-Publishing-And-Versions.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="code" data-search="s2: how the engine picks an account, and fails over stored-card rebills, the fallback, a refusal and the one failover. paymt-520 orchestrator code flows">
+  <button class="thumb" data-open="S2-Routing-Decision-And-Failover.html" data-title="S2: how the engine picks an account, and fails over" aria-label="Expand S2: how the engine picks an account, and fails over">
+    <img class="lt" src="_thumbs/S2-Routing-Decision-And-Failover.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/S2-Routing-Decision-And-Failover-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g code">Orchestrator code flows</span><span class="tag t">PAYMT-520</span><span class="date">2026-11-09</span></div>
+    <h2>S2: how the engine picks an account, and fails over</h2>
+    <p class="about">Stored-card rebills, the fallback, a refusal and the one failover.</p>
+    <div class="actions"><button class="btn" data-open="S2-Routing-Decision-And-Failover.html" data-title="S2: how the engine picks an account, and fails over">Expand</button><a class="btn ghost" href="S2-Routing-Decision-And-Failover.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="code" data-search="s1: a card payment, end to end one payment through the in-house orchestrator&#x27;s own code, step by step. paymt-520 orchestrator code flows">
+  <button class="thumb" data-open="S1-Card-Payment-End-To-End.html" data-title="S1: a card payment, end to end" aria-label="Expand S1: a card payment, end to end">
+    <img class="lt" src="_thumbs/S1-Card-Payment-End-To-End.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/S1-Card-Payment-End-To-End-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g code">Orchestrator code flows</span><span class="tag t">PAYMT-520</span><span class="date">2026-11-09</span></div>
+    <h2>S1: a card payment, end to end</h2>
+    <p class="about">One payment through the in-house orchestrator&#x27;s own code, step by step.</p>
+    <div class="actions"><button class="btn" data-open="S1-Card-Payment-End-To-End.html" data-title="S1: a card payment, end to end">Expand</button><a class="btn ghost" href="S1-Card-Payment-End-To-End.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="dd" data-search="dd-004: one network transaction id per subscription why the bank&#x27;s receipt belongs to the subscription, not the card. dd-004 orchestrator design docs">
+  <button class="thumb" data-open="DD-004-One-Network-Transaction-Id-Per-Subscription.html" data-title="DD-004: one network transaction id per subscription" aria-label="Expand DD-004: one network transaction id per subscription">
+    <img class="lt" src="_thumbs/DD-004-One-Network-Transaction-Id-Per-Subscription.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/DD-004-One-Network-Transaction-Id-Per-Subscription-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g dd">Orchestrator design docs</span><span class="tag t">DD-004</span><span class="date">2026-11-09</span></div>
+    <h2>DD-004: one network transaction id per subscription</h2>
+    <p class="about">Why the bank&#x27;s receipt belongs to the subscription, not the card.</p>
+    <div class="actions"><button class="btn" data-open="DD-004-One-Network-Transaction-Id-Per-Subscription.html" data-title="DD-004: one network transaction id per subscription">Expand</button><a class="btn ghost" href="DD-004-One-Network-Transaction-Id-Per-Subscription.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="attack" data-search="us one-time card order: first try and fallback the first stack diagram: a us one-time card order goes to worldpay first, then the nmi gateway on a decline. paymt-132 card attack and recaptcha">
+  <button class="thumb" data-open="US-Card-Order-Fallback-Path.html" data-title="US one-time card order: first try and fallback" aria-label="Expand US one-time card order: first try and fallback">
+    <img class="lt" src="_thumbs/US-Card-Order-Fallback-Path.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/US-Card-Order-Fallback-Path-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g attack">Card attack and reCAPTCHA</span><span class="tag t">PAYMT-132</span><span class="date">2026-11-08</span></div>
+    <h2>US one-time card order: first try and fallback</h2>
+    <p class="about">The first stack diagram: a US one-time card order goes to Worldpay first, then the NMI gateway on a decline.</p>
+    <div class="actions"><button class="btn" data-open="US-Card-Order-Fallback-Path.html" data-title="US one-time card order: first try and fallback">Expand</button><a class="btn ghost" href="US-Card-Order-Fallback-Path.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="attack" data-search="us card attack and every remediation the attack from 22 sep to 7 nov as a live map in 15 steps, with a timeline of attack orders and every remediation by layer. paymt-132 card attack and recaptcha">
+  <button class="thumb" data-open="US-Card-Attack-And-Remediations.html" data-title="US card attack and every remediation" aria-label="Expand US card attack and every remediation">
+    <img class="lt" src="_thumbs/US-Card-Attack-And-Remediations.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/US-Card-Attack-And-Remediations-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g attack">Card attack and reCAPTCHA</span><span class="tag t">PAYMT-132</span><span class="date">2026-11-08</span></div>
+    <h2>US card attack and every remediation</h2>
+    <p class="about">The attack from 22 Sep to 7 Nov as a live map in 15 steps, with a timeline of attack orders and every remediation by layer.</p>
+    <div class="actions"><button class="btn" data-open="US-Card-Attack-And-Remediations.html" data-title="US card attack and every remediation">Expand</button><a class="btn ghost" href="US-Card-Attack-And-Remediations.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="dd" data-search="dd-012: the routing control panel field map of the design doc, step by step. dd-012 orchestrator design docs">
+  <button class="thumb" data-open="DD-012-Routing-Control-Panel.html" data-title="DD-012: the routing control panel" aria-label="Expand DD-012: the routing control panel">
+    <img class="lt" src="_thumbs/DD-012-Routing-Control-Panel.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/DD-012-Routing-Control-Panel-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g dd">Orchestrator design docs</span><span class="tag t">DD-012</span><span class="date">2026-11-08</span></div>
+    <h2>DD-012: the routing control panel</h2>
+    <p class="about">Field map of the design doc, step by step.</p>
+    <div class="actions"><button class="btn" data-open="DD-012-Routing-Control-Panel.html" data-title="DD-012: the routing control panel">Expand</button><a class="btn ghost" href="DD-012-Routing-Control-Panel.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="dd" data-search="dd-011: reconciliation, every payment&#x27;s money story field map of the design doc, step by step. dd-011 orchestrator design docs">
+  <button class="thumb" data-open="DD-011-Reconciliation.html" data-title="DD-011: reconciliation, every payment&#x27;s money story" aria-label="Expand DD-011: reconciliation, every payment&#x27;s money story">
+    <img class="lt" src="_thumbs/DD-011-Reconciliation.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/DD-011-Reconciliation-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g dd">Orchestrator design docs</span><span class="tag t">DD-011</span><span class="date">2026-11-08</span></div>
+    <h2>DD-011: reconciliation, every payment&#x27;s money story</h2>
+    <p class="about">Field map of the design doc, step by step.</p>
+    <div class="actions"><button class="btn" data-open="DD-011-Reconciliation.html" data-title="DD-011: reconciliation, every payment&#x27;s money story">Expand</button><a class="btn ghost" href="DD-011-Reconciliation.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="dd" data-search="dd-010: refunds, voids and money back field map of the design doc, step by step. dd-010 orchestrator design docs">
+  <button class="thumb" data-open="DD-010-Refunds-Voids-And-Money-Back.html" data-title="DD-010: refunds, voids and money back" aria-label="Expand DD-010: refunds, voids and money back">
+    <img class="lt" src="_thumbs/DD-010-Refunds-Voids-And-Money-Back.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/DD-010-Refunds-Voids-And-Money-Back-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g dd">Orchestrator design docs</span><span class="tag t">DD-010</span><span class="date">2026-11-08</span></div>
+    <h2>DD-010: refunds, voids and money back</h2>
+    <p class="about">Field map of the design doc, step by step.</p>
+    <div class="actions"><button class="btn" data-open="DD-010-Refunds-Voids-And-Money-Back.html" data-title="DD-010: refunds, voids and money back">Expand</button><a class="btn ghost" href="DD-010-Refunds-Voids-And-Money-Back.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="dd" data-search="dd-008: what the orchestrator would have added field map of the design doc, step by step. dd-008 orchestrator design docs">
+  <button class="thumb" data-open="DD-008-What-The-Orchestrator-Would-Have-Added.html" data-title="DD-008: what the orchestrator would have added" aria-label="Expand DD-008: what the orchestrator would have added">
+    <img class="lt" src="_thumbs/DD-008-What-The-Orchestrator-Would-Have-Added.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/DD-008-What-The-Orchestrator-Would-Have-Added-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g dd">Orchestrator design docs</span><span class="tag t">DD-008</span><span class="date">2026-11-08</span></div>
+    <h2>DD-008: what the orchestrator would have added</h2>
+    <p class="about">Field map of the design doc, step by step.</p>
+    <div class="actions"><button class="btn" data-open="DD-008-What-The-Orchestrator-Would-Have-Added.html" data-title="DD-008: what the orchestrator would have added">Expand</button><a class="btn ghost" href="DD-008-What-The-Orchestrator-Would-Have-Added.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="dd" data-search="dd-007: decline intelligence field map of the design doc, step by step. dd-007 orchestrator design docs">
+  <button class="thumb" data-open="DD-007-Decline-Intelligence.html" data-title="DD-007: decline intelligence" aria-label="Expand DD-007: decline intelligence">
+    <img class="lt" src="_thumbs/DD-007-Decline-Intelligence.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/DD-007-Decline-Intelligence-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g dd">Orchestrator design docs</span><span class="tag t">DD-007</span><span class="date">2026-11-08</span></div>
+    <h2>DD-007: decline intelligence</h2>
+    <p class="about">Field map of the design doc, step by step.</p>
+    <div class="actions"><button class="btn" data-open="DD-007-Decline-Intelligence.html" data-title="DD-007: decline intelligence">Expand</button><a class="btn ghost" href="DD-007-Decline-Intelligence.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="dd" data-search="dd-006: orchestrator kpis the orchestrator&#x27;s key performance indicators (kpis) and where each is measured. dd-006 orchestrator design docs">
+  <button class="thumb" data-open="DD-006-Orchestrator-KPIs.html" data-title="DD-006: orchestrator KPIs" aria-label="Expand DD-006: orchestrator KPIs">
+    <img class="lt" src="_thumbs/DD-006-Orchestrator-KPIs.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/DD-006-Orchestrator-KPIs-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g dd">Orchestrator design docs</span><span class="tag t">DD-006</span><span class="date">2026-11-08</span></div>
+    <h2>DD-006: orchestrator KPIs</h2>
+    <p class="about">The orchestrator&#x27;s key performance indicators (KPIs) and where each is measured.</p>
+    <div class="actions"><button class="btn" data-open="DD-006-Orchestrator-KPIs.html" data-title="DD-006: orchestrator KPIs">Expand</button><a class="btn ghost" href="DD-006-Orchestrator-KPIs.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="dd" data-search="dd-005: dynamic routing, the ladder every payment walks field map of the design doc, step by step. dd-005 orchestrator design docs">
+  <button class="thumb" data-open="DD-005-Dynamic-Routing-Rules.html" data-title="DD-005: dynamic routing, the ladder every payment walks" aria-label="Expand DD-005: dynamic routing, the ladder every payment walks">
+    <img class="lt" src="_thumbs/DD-005-Dynamic-Routing-Rules.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/DD-005-Dynamic-Routing-Rules-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g dd">Orchestrator design docs</span><span class="tag t">DD-005</span><span class="date">2026-11-08</span></div>
+    <h2>DD-005: dynamic routing, the ladder every payment walks</h2>
+    <p class="about">Field map of the design doc, step by step.</p>
+    <div class="actions"><button class="btn" data-open="DD-005-Dynamic-Routing-Rules.html" data-title="DD-005: dynamic routing, the ladder every payment walks">Expand</button><a class="btn ghost" href="DD-005-Dynamic-Routing-Rules.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="dd" data-search="dd-003: call-centre charges that skip the bank check call-centre charges that skip the bank check and lose the subscription. dd-003 orchestrator design docs">
+  <button class="thumb" data-open="DD-003-Bank-Check-Gaps-Call-Centre-Charges.html" data-title="DD-003: call-centre charges that skip the bank check" aria-label="Expand DD-003: call-centre charges that skip the bank check">
+    <img class="lt" src="_thumbs/DD-003-Bank-Check-Gaps-Call-Centre-Charges.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/DD-003-Bank-Check-Gaps-Call-Centre-Charges-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g dd">Orchestrator design docs</span><span class="tag t">DD-003</span><span class="date">2026-11-08</span></div>
+    <h2>DD-003: call-centre charges that skip the bank check</h2>
+    <p class="about">Call-centre charges that skip the bank check and lose the subscription.</p>
+    <div class="actions"><button class="btn" data-open="DD-003-Bank-Check-Gaps-Call-Centre-Charges.html" data-title="DD-003: call-centre charges that skip the bank check">Expand</button><a class="btn ghost" href="DD-003-Bank-Check-Gaps-Call-Centre-Charges.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="dd" data-search="dd-002: ask the bank to skip the challenge low-risk one-time orders and the exemptions that skip the 3d secure challenge. dd-002 orchestrator design docs">
+  <button class="thumb" data-open="DD-002-Exemptions-To-Skip-The-Bank-Challenge.html" data-title="DD-002: ask the bank to skip the challenge" aria-label="Expand DD-002: ask the bank to skip the challenge">
+    <img class="lt" src="_thumbs/DD-002-Exemptions-To-Skip-The-Bank-Challenge.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/DD-002-Exemptions-To-Skip-The-Bank-Challenge-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g dd">Orchestrator design docs</span><span class="tag t">DD-002</span><span class="date">2026-11-08</span></div>
+    <h2>DD-002: ask the bank to skip the challenge</h2>
+    <p class="about">Low-risk one-time orders and the exemptions that skip the 3D Secure challenge.</p>
+    <div class="actions"><button class="btn" data-open="DD-002-Exemptions-To-Skip-The-Bank-Challenge.html" data-title="DD-002: ask the bank to skip the challenge">Expand</button><a class="btn ghost" href="DD-002-Exemptions-To-Skip-The-Bank-Challenge.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+<article class="card" data-g="dd" data-search="dd-001: retry a refused card at a second processor field map of the design doc, step by step. dd-001 orchestrator design docs">
+  <button class="thumb" data-open="DD-001-Retry-At-A-Second-Processor.html" data-title="DD-001: retry a refused card at a second processor" aria-label="Expand DD-001: retry a refused card at a second processor">
+    <img class="lt" src="_thumbs/DD-001-Retry-At-A-Second-Processor.jpg" alt="" loading="lazy"><img class="dk" src="_thumbs/DD-001-Retry-At-A-Second-Processor-dark.jpg" alt="" loading="lazy"><span class="open">Click to expand</span>
+  </button>
+  <div class="body">
+    <div class="tags"><span class="tag g dd">Orchestrator design docs</span><span class="tag t">DD-001</span><span class="date">2026-11-08</span></div>
+    <h2>DD-001: retry a refused card at a second processor</h2>
+    <p class="about">Field map of the design doc, step by step.</p>
+    <div class="actions"><button class="btn" data-open="DD-001-Retry-At-A-Second-Processor.html" data-title="DD-001: retry a refused card at a second processor">Expand</button><a class="btn ghost" href="DD-001-Retry-At-A-Second-Processor.html" target="_blank" rel="noopener">Open full page</a></div>
+  </div>
+</article>
+</main>
+<p class="key">Each page works on its own, offline: fonts, icons and steps are inside the file. Esc closes the expanded view.</p>
+<dialog id="dlg"><div class="dh"><span id="dt"></span><a id="dl" href="#" target="_blank" rel="noopener">Open full page</a><button id="dc" type="button" aria-label="Close">&times;</button></div><iframe title="Diagram"></iframe></dialog>
+<script>
+(function(){
+  var root=document.documentElement,tb=document.getElementById('theme'),key='theme:stacked-diagrams';
+  var cur=null;
+  function frameTheme(reload){var fr=document.querySelector('#dlg iframe');if(!fr)return;
+    if(reload===true&&cur&&document.getElementById('dlg').open){fr.src=cur+'#theme='+(root.classList.contains('dark')?'dark':'light');}try{var r=fr.contentDocument.documentElement;
+    if(root.classList.contains('dark'))r.setAttribute('data-theme','dark');else r.removeAttribute('data-theme');}catch(e){}}
+  function set(d){root.classList.toggle('dark',d);tb.textContent=d?'Light':'Dark';frameTheme(true);}
+  document.querySelector('#dlg iframe').addEventListener('load',frameTheme);
+  try{set(localStorage.getItem(key)==='dark');}catch(e){set(false);}
+  tb.addEventListener('click',function(){var d=!root.classList.contains('dark');set(d);try{localStorage.setItem(key,d?'dark':'light');}catch(e){}});
+  var f='all',q='',cards=[].slice.call(document.querySelectorAll('.card'));
+  function apply(){var n=0;cards.forEach(function(c){var ok=(f==='all'||c.dataset.g===f)&&(!q||c.dataset.search.indexOf(q)>=0);c.hidden=!ok;if(ok)n++;});
+    document.getElementById('count').textContent=n+' of '+cards.length+' shown';}
+  [].forEach.call(document.querySelectorAll('.chip'),function(b){b.addEventListener('click',function(){
+    [].forEach.call(document.querySelectorAll('.chip'),function(x){x.classList.remove('on');});b.classList.add('on');f=b.dataset.f;
+    try{history.replaceState(null,'',f==='all'?location.pathname:'#group='+f);}catch(e){}apply();});});
+  document.querySelector('input[type=search]').addEventListener('input',function(e){q=e.target.value.trim().toLowerCase();apply();});
+  var dlg=document.getElementById('dlg'),fr=dlg.querySelector('iframe');
+  function openD(src,title){cur=src;fr.src=src+'#theme='+(root.classList.contains('dark')?'dark':'light');document.getElementById('dt').textContent=title;document.getElementById('dl').href=src;dlg.showModal();}
+  [].forEach.call(document.querySelectorAll('[data-open]'),function(b){b.addEventListener('click',function(){openD(b.dataset.open,b.dataset.title);});});
+  document.getElementById('dc').addEventListener('click',function(){dlg.close();});
+  dlg.addEventListener('close',function(){fr.src='about:blank';});
+  var m=location.hash.match(/group=(\w+)/);if(m){var c=document.querySelector('.chip[data-f="'+m[1]+'"]');if(c)c.click();}
+  apply();
+})();
+</script>
+</body></html>
